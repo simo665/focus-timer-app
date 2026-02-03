@@ -33,9 +33,11 @@ class _TimerScreenState extends State<TimerScreen> {
 
   Timer? _timer;
   int _secondsRemaining = defaultBusyTime;
+  int _totalBusyTime = 0;
   bool isPause = false;
-  bool _isResting = false;
+  bool _isResting = true;
   bool _isTimerStarted = false;
+  bool _OnChillMode = true;
 
   // background colors
   Color _appBarColor = Color(0xffFFB3CB);
@@ -45,15 +47,17 @@ class _TimerScreenState extends State<TimerScreen> {
   final AudioPlayer _player = AudioPlayer();
 
   // function to change the background color based on the timer state
-  void _changeColors(bool busy) {
+  void _changeMode(bool busy) {
     if (busy) {
       setState(() {
         _backgroundColor = Color(0xff9F47DE);
         _appBarColor = Color(0xffC795DE);
+        _OnChillMode = false;
       });
     } else {
       _appBarColor = Color(0xffFFB3CB);
       _backgroundColor = Color(0xffDE648A);
+      _OnChillMode = true;
     }
   }
 
@@ -82,7 +86,7 @@ class _TimerScreenState extends State<TimerScreen> {
       });
     }
     // change background color
-    _changeColors(!restTimer);
+    _changeMode(!restTimer);
     // start new timer
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
       setState(() {
@@ -91,7 +95,7 @@ class _TimerScreenState extends State<TimerScreen> {
           // cancel timer
           timer.cancel();
           // change color
-          _changeColors(false);
+          _changeMode(false);
           // play ring tone for notification
           _playRingTone( restTimer ? ringTone2 : ringTone1);
 
@@ -103,6 +107,9 @@ class _TimerScreenState extends State<TimerScreen> {
           return;
         } else {
           _secondsRemaining--;
+          if (!restTimer) {
+            _totalBusyTime++;
+          }
         }
       });
     });
@@ -112,14 +119,13 @@ class _TimerScreenState extends State<TimerScreen> {
     if (!_isTimerStarted) {
       return;
     }
-
     _timer?.cancel();
     if (isPause) {
       _startTimer(_isResting, reset: false);
     } else {
       setState(() {
         isPause = true;
-        _changeColors(false);
+        _changeMode(false);
       });
     }
   }
@@ -132,8 +138,10 @@ class _TimerScreenState extends State<TimerScreen> {
     _timer?.cancel();
     setState(() {
       isPause = false;
+      _isResting = true;
       _secondsRemaining = defaultBusyTime;
-      _changeColors(false);
+      _totalBusyTime = 0;
+      _changeMode(false);
       _isTimerStarted = false;
     });
   }
@@ -148,9 +156,16 @@ class _TimerScreenState extends State<TimerScreen> {
   String _formatDuration(int seconds) {
     final duration = Duration(seconds: seconds);
     String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitHours = twoDigits(duration.inHours.remainder(60));
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$twoDigitMinutes:$twoDigitSeconds";
+
+    if (twoDigitHours == "00") {
+      return "$twoDigitMinutes:$twoDigitSeconds";
+    } else {
+      return "$twoDigitHours:$twoDigitMinutes:$twoDigitSeconds";
+    }
+
   }
 
   @override
@@ -168,8 +183,29 @@ class _TimerScreenState extends State<TimerScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Text(
+            _OnChillMode ? "Chilling Time" : "Busy",
+            style: TextStyle(
+              fontSize: 44,
+              fontFamily: "Knewave",
+              color: _OnChillMode ? Color(0xffFFB3CB) : Color(0xffC795DE),
+            ),
+          ),
+          const SizedBox(height: 60,),
+          Text(
             _formatDuration(_secondsRemaining),
-            style: const TextStyle(fontSize: 80, fontFamily: "Knewave"),
+            style: const TextStyle(
+                fontSize: 80,
+                fontFamily: "Knewave",
+              color: Colors.white
+            ),
+          ),
+          Text(
+            _formatDuration(_totalBusyTime),
+            style: TextStyle(
+              fontSize: 24,
+              fontFamily: "Knewave",
+              color: Colors.black26,
+            ),
           ),
           const SizedBox(height: 20),
           Row(
