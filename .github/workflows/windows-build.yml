@@ -1,0 +1,33 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version: '3.10.7' # Match the version in pubspec.yaml environment
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Build Windows App
+      run: flutter build windows
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: focus-time-windows
+        path: build/windows/runner/Release/
