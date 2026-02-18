@@ -8,10 +8,10 @@ class TimerSettings extends ChangeNotifier {
   static const String keyVolume = "music_volume";
 
   // Focus (Work) Settings - Default 25 minutes
-  int _focusDuration = 20;
+  int _focusDuration = 25 * 60;
 
   // Relax (Chill) Settings - Default 5 minutes
-  int _chillDuration = 10;
+  int _chillDuration = 5 * 60;
 
   // Audio Settings
   bool _isBackgroundMusicEnabled = true;
