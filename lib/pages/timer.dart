@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:disable_battery_optimization/disable_battery_optimization.dart';
 import 'package:focus_time/design.dart';
 import 'settings.dart';
 import '../providers/settings_provider.dart';
@@ -46,7 +47,59 @@ class _TimerScreenState extends State<TimerScreen> {
         _onChillMode = false;
         _backgroundGradient = Design.focusGradient;
       });
+      _checkBatteryOptimization();
     });
+  }
+
+  Future<void> _checkBatteryOptimization() async {
+    bool? isDisabled =
+        await DisableBatteryOptimization.isBatteryOptimizationDisabled;
+    if (isDisabled == false) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Design.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            "Timer Reliability",
+            style: TextStyle(color: Design.lightText, fontFamily: "Knewave"),
+          ),
+          content: const Text(
+            "To ensure your focus sessions aren't interrupted when the screen is off, please disable battery optimization for Focus Time.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "Not Now",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Design.accent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                "Go to Settings",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   // function to change the background color based on the timer state
